@@ -1,0 +1,19 @@
+本工具通过动态加载用户电脑上已经安装的豆包输入法组件提供识别能力。
+安装包不重新分发豆包输入法、豆包语音 SDK 或任何用户账号配置。
+
+内置运行时：CPython 3.14.7 Windows x64 embeddable distribution
+来源：https://www.python.org/ftp/python/3.14.7/python-3.14.7-embed-amd64.zip
+项目：https://www.python.org/
+版权及许可：见 runtime/LICENSE.txt。
+
+音频格式读取封装：NAudio 1.10.0
+Copyright Mark Heath and NAudio contributors.
+许可：Microsoft Public License (Ms-PL)，见 licenses/NAudio-license.txt。
+来源：https://www.nuget.org/packages/NAudio/1.10.0
+源码：https://github.com/naudio/NAudio/tree/v1.10.0
+读取及重采样实际使用 Windows Media Foundation，不打开录音或播放设备。
+
+安装器：Inno Setup 6.7.3
+Copyright Jordan Russell and Martijn Laan.
+项目：https://jrsoftware.org/
+许可：见 licenses/Inno-Setup-license.txt。

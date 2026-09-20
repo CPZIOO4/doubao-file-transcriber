@@ -1,0 +1,47 @@
+[LangOptions]
+LanguageName=简体中文
+LanguageID=$0804
+DialogFontName=Microsoft YaHei UI
+DialogFontSize=9
+
+[Messages]
+SetupAppTitle=安装程序
+SetupWindowTitle=安装 - %1
+UninstallAppTitle=卸载
+UninstallAppFullTitle=卸载 %1
+ButtonBack=< 上一步(&B)
+ButtonNext=下一步(&N) >
+ButtonInstall=安装(&I)
+ButtonOK=确定
+ButtonCancel=取消
+ButtonFinish=完成(&F)
+ButtonBrowse=浏览(&B)…
+ButtonYes=是(&Y)
+ButtonNo=否(&N)
+WelcomeLabel1=欢迎使用 [name] 安装向导
+WelcomeLabel2=本向导将在您的电脑上安装 [name/ver]。%n%n点击“下一步”继续。
+WizardInfoBefore=使用说明
+InfoBeforeLabel=请先阅读下面的信息，再继续安装。
+InfoBeforeClickLabel=准备好后，点击“下一步”继续。
+WizardSelectDir=选择安装位置
+SelectDirDesc=您希望将 [name] 安装到哪里？
+SelectDirLabel3=安装程序将把 [name] 安装到下列文件夹。
+SelectDirBrowseLabel=点击“下一步”继续。如需更改位置，请点击“浏览”。
+WizardSelectTasks=选择附加任务
+SelectTasksDesc=您希望执行哪些附加任务？
+SelectTasksLabel2=选择安装时执行的附加任务，然后点击“下一步”。
+WizardReady=准备安装
+ReadyLabel1=安装程序现在可以开始安装 [name]。
+ReadyLabel2a=点击“安装”开始。点击“上一步”可以检查或修改设置。
+ReadyMemoDir=安装位置：
+ReadyMemoTasks=附加任务：
+WizardInstalling=正在安装
+InstallingLabel=请稍候，正在安装 [name]。
+FinishedHeadingLabel=[name] 安装完成
+FinishedLabelNoIcons=安装已完成。
+FinishedLabel=[name] 已安装到您的电脑上。
+ClickFinish=点击“完成”退出安装程序。
+ExitSetupTitle=退出安装
+ExitSetupMessage=安装尚未完成。确定退出安装程序？
+ConfirmUninstall=确定完全卸载 %1 及其程序组件？%n%n您保存的转写 TXT 不会被删除。
+UninstalledAll=%1 已成功从您的电脑上卸载。

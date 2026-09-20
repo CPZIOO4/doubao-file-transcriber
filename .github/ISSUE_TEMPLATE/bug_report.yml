@@ -1,0 +1,31 @@
+name: 故障反馈
+description: 报告安装、检测或转写失败
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "请勿上传个人录音、完整转写、账号信息或未经清理的原生日志。"
+  - type: input
+    id: versions
+    attributes:
+      label: 系统 / 工具 / 豆包输入法版本
+      placeholder: Windows 11 x64 / 1.0.0-preview.1 / 0.9.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤与预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果与界面错误
+      description: 可提供去除个人文件名和文字的截图；不需要原始录音。
+    validations:
+      required: true
+  - type: input
+    id: audio
+    attributes:
+      label: 音频格式与大致时长
