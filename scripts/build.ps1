@@ -69,7 +69,7 @@ if (-not $SkipInstaller) {
     }
     & $InnoCompiler /Qp "/DPackageDir=$stageRoot" "/DReleaseDir=$distRoot" (Join-Path $projectRoot 'src\installer.iss')
     if ($LASTEXITCODE -ne 0) { throw 'Installer build failed.' }
-    $installerPath = Join-Path $distRoot 'doubao-file-transcriber-1.0.0-preview.1-windows-x64-setup.exe'
+    $installerPath = Join-Path $distRoot 'doubao-file-transcriber-1.2.0-preview.1-windows-x64-setup.exe'
     $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $installerPath).Hash.ToLowerInvariant()
     [IO.File]::WriteAllText((Join-Path $distRoot 'SHA256SUMS.txt'), ($digest + '  ' + [IO.Path]::GetFileName($installerPath) + "`n"), $utf8)
     Write-Host ('Installer: ' + $installerPath)

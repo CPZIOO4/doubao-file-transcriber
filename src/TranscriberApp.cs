@@ -31,6 +31,7 @@ internal sealed class WorkItem
     public string Source;
     public string Output;
     public string OutputFolder;
+    public int Workers;
     public ListViewItem Row;
 }
 
@@ -50,6 +51,7 @@ internal sealed class TranscriberForm : Form
     readonly Label compatibilityLabel = new Label();
     readonly Button recheck = new Button();
     readonly Button website = new Button();
+    readonly NumericUpDown workerSelector = new NumericUpDown();
     string outputFolder;
     Process activeProcess;
     IntPtr activeJob;
@@ -97,6 +99,7 @@ internal sealed class TranscriberForm : Form
         files.View = View.Details;
         files.FullRowSelect = true;
         files.GridLines = false;
+        files.ShowItemToolTips = true;
         files.Dock = DockStyle.Fill;
         files.Columns.Add("录音文件", 370);
         files.Columns.Add("状态", 350);
@@ -119,7 +122,13 @@ internal sealed class TranscriberForm : Form
         cancel.AutoSize = true;
         cancel.Enabled = false;
         cancel.Click += delegate { StopCurrent(); };
-        buttons.Controls.AddRange(new Control[] { add, choose, open, cancel });
+        var workerLabel = new Label { Text = "并发任务池", AutoSize = true, Margin = new Padding(12, 5, 4, 0) };
+        workerSelector.Minimum = 1;
+        workerSelector.Maximum = 20;
+        workerSelector.Value = 5;
+        workerSelector.Width = 52;
+        workerSelector.Margin = new Padding(0, 2, 0, 0);
+        buttons.Controls.AddRange(new Control[] { add, choose, open, cancel, workerLabel, workerSelector });
         layout.Controls.Add(buttons, 0, 4);
         folderLabel.Dock = DockStyle.Fill;
         folderLabel.AutoEllipsis = true;
@@ -132,7 +141,10 @@ internal sealed class TranscriberForm : Form
         hint.AutoSize = true;
         autoHide.Text = "加入后隐藏到托盘";
         autoHide.AutoSize = true;
+        var clearRecovery = new Button { Text = "清除恢复缓存", AutoSize = true };
+        clearRecovery.Click += delegate { ClearRecoveryCache(); };
         bottom.Controls.Add(autoHide);
+        bottom.Controls.Add(clearRecovery);
         bottom.Controls.Add(hint);
         layout.Controls.Add(bottom, 0, 7);
         UpdateFolder();
@@ -209,6 +221,26 @@ internal sealed class TranscriberForm : Form
     void UpdateFolder() { folderLabel.Text = "保存到：" + outputFolder + "  ·  同名文件不会覆盖"; }
     void ShowWindow() { Show(); WindowState = FormWindowState.Normal; Activate(); }
 
+    void ClearRecoveryCache()
+    {
+        if (busy) { MessageBox.Show("请先停止当前任务，再清除恢复缓存。", Text); return; }
+        string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                     "DoubaoFileTranscriber", "Checkpoints");
+        if (!Directory.Exists(folder)) { MessageBox.Show("没有待清除的恢复缓存。", Text); return; }
+        try {
+            var records = new List<string>();
+            records.AddRange(Directory.GetFiles(folder, "checkpoint-*.json"));
+            records.AddRange(Directory.GetFiles(folder, "checkpoint-*.tmp"));
+            if (records.Count == 0) { MessageBox.Show("没有待清除的恢复缓存。", Text); return; }
+            if (MessageBox.Show("清除后，未完成录音的已识别分段将无法恢复，需要重新转写。确定清除？",
+                                Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            foreach (string path in records) File.Delete(path);
+            hint.Text = "已清除 " + records.Count + " 个恢复缓存文件";
+        } catch (Exception ex) {
+            MessageBox.Show("清除失败：" + ex.GetType().Name + "。请关闭其他转写任务后重试。", Text);
+        }
+    }
+
     void OpenSelected()
     {
         if (files.SelectedItems.Count == 0) return;
@@ -224,8 +256,8 @@ internal sealed class TranscriberForm : Form
             string path;
             try { path = Path.GetFullPath(raw); } catch { continue; }
             if (!File.Exists(path) || pending.Contains(path)) continue;
-            var work = new WorkItem { Source = path, OutputFolder = outputFolder };
-            work.Row = new ListViewItem(new string[] { Path.GetFileName(path), "排队中" });
+            var work = new WorkItem { Source = path, OutputFolder = outputFolder, Workers = (int)workerSelector.Value };
+            work.Row = new ListViewItem(new string[] { Path.GetFileName(path), "排队中 · " + work.Workers + " 路" });
             work.Row.Tag = work;
             work.Row.ToolTipText = path;
             files.Items.Add(work.Row);
@@ -256,8 +288,8 @@ internal sealed class TranscriberForm : Form
         cancel.Enabled = true;
         progress.Value = 0;
         WorkItem work = queue.Dequeue();
-        work.Row.SubItems[1].Text = "准备中";
-        hint.Text = "后台转写中 · 等待 " + queue.Count + " 个";
+        work.Row.SubItems[1].Text = "准备中 · " + work.Workers + " 路";
+        hint.Text = "后台转写中 · " + work.Workers + " 路 · 等待 " + queue.Count + " 个";
         tray.Text = "豆包录音转写 · 正在识别";
         bool completed = false;
         string failure = null;
@@ -265,7 +297,7 @@ internal sealed class TranscriberForm : Form
         string taskCache = Path.Combine(cacheRoot, Guid.NewGuid().ToString("N"));
         try
         {
-            var info = BackendInfo(Quote(work.Source) + " --output-dir " + Quote(work.OutputFolder) + " --work-dir " + Quote(taskCache));
+            var info = BackendInfo(Quote(work.Source) + " --output-dir " + Quote(work.OutputFolder) + " --work-dir " + Quote(taskCache) + " --workers " + work.Workers);
             using (var process = new Process { StartInfo = info })
             {
                 activeProcess = process;
@@ -285,7 +317,14 @@ internal sealed class TranscriberForm : Form
                     {
                         completed = true;
                         work.Row.ForeColor = Color.FromArgb(24, 120, 70);
-                        if (update.ContainsKey("warnings") && json.Serialize(update["warnings"]) != "[]")
+                        string cacheWarning = update.ContainsKey("cache_warning") ? Convert.ToString(update["cache_warning"]) : "";
+                        if (!String.IsNullOrEmpty(cacheWarning))
+                        {
+                            work.Row.SubItems[1].Text = "完成 · 临时缓存未清理";
+                            work.Row.ToolTipText = cacheWarning;
+                            tray.ShowBalloonTip(5000, Text, "转写已完成，但临时缓存未清理。请在列表中查看路径。", ToolTipIcon.Warning);
+                        }
+                        else if (update.ContainsKey("warnings") && json.Serialize(update["warnings"]) != "[]")
                             work.Row.SubItems[1].Text = "完成 · 连续长句分段处请校对";
                     }
                     if (type == "error") failure = Convert.ToString(update["message"]);
@@ -306,7 +345,7 @@ internal sealed class TranscriberForm : Form
         if (quitting || IsDisposed) return;
         if (cancelled) { work.Row.SubItems[1].Text = "已停止"; work.Row.ForeColor = Color.DimGray; }
         else if (!completed || failure != null) { work.Row.SubItems[1].Text = failure ?? "未收到完成结果"; work.Row.ForeColor = Color.Firebrick; }
-        hint.Text = completed && !cancelled ? "已保存 TXT · 双击结果可打开" : "任务已结束 · 可重新拖入重试";
+        hint.Text = completed && !cancelled ? "已保存 TXT · 双击结果可打开" : "任务已结束 · 可再次加入同一文件继续";
         tray.Text = "豆包录音转写 · " + (completed ? "已完成" : "任务已结束");
         busy = false;
         RunNext();
