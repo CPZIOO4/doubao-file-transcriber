@@ -8,8 +8,8 @@
 [Setup]
 AppId={{7E82E96B-4763-4E63-8E14-0E49D3687812}
 AppName=豆包录音转写助手
-AppVersion=1.0.0
-AppVerName=豆包录音转写助手 1.0.0-preview.1
+AppVersion=1.2.0
+AppVerName=豆包录音转写助手 1.2.0-preview.1
 AppPublisher=CPZIOO4（第三方工具）
 AppPublisherURL=https://github.com/CPZIOO4/doubao-file-transcriber
 AppSupportURL=https://github.com/CPZIOO4/doubao-file-transcriber/issues
@@ -22,7 +22,7 @@ ArchitecturesAllowed=x64os
 ArchitecturesInstallIn64BitMode=x64os
 MinVersion=10.0.17763
 OutputDir={#ReleaseDir}
-OutputBaseFilename=doubao-file-transcriber-1.0.0-preview.1-windows-x64-setup
+OutputBaseFilename=doubao-file-transcriber-1.2.0-preview.1-windows-x64-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
